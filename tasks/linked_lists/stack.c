@@ -8,7 +8,7 @@ stack_entry_t* create_stack_entry(void *data)
     
     if (entry != NULL) 
     {
-        INIT_HLIST_NODE(entry->hl);
+        INIT_LIST_HEAD(&entry->lh);
         entry->data = data;
     }
     

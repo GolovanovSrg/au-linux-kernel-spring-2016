@@ -4,6 +4,7 @@
 #include <linux/sched.h>
 #include <linux/slab.h>
 #include <linux/errno.h>
+#include <linux/list.h>
 
 #include "stack.h"
 #include "assert.h"
@@ -35,7 +36,7 @@ static void __init test_stack(void)
     assert(stack_empty(&data_stack));
 }
 
-static void __init print_processes_backwards(void)
+static int __init print_processes_backwards(void)
 {
     LIST_HEAD(ps_stack);
     struct task_struct *task;
@@ -57,21 +58,21 @@ static void __init print_processes_backwards(void)
         stack_push(&ps_stack, entry);
     }
     
-    while (!list_empty(ps_stack))
+    while (!list_empty(&ps_stack))
     {
-        entry = stack_pop(ps_stack);
-        printk(KERN_ALERT "%s\n", *STACK_ENTRY_DATA(entry, char*));
+        entry = stack_pop(&ps_stack);
+        printk(KERN_ALERT "%s\n", STACK_ENTRY_DATA(entry, char*));
         delete_stack_entry(entry);
     }
        
 error:
-    while (!list_empty(ps_stack))
+    while (!list_empty(&ps_stack))
     {
-        entry = stack_pop(ps_stack);
+        entry = stack_pop(&ps_stack);
         delete_stack_entry(entry);
     }
    
-   ret -ENOMEM;
+    return -ENOMEM;
 }
 
 static int __init ll_init(void)
