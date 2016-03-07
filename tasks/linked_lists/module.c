@@ -3,6 +3,7 @@
 #include <linux/module.h>
 #include <linux/sched.h>
 #include <linux/slab.h>
+#include <linux/errno.h>
 
 #include "stack.h"
 #include "assert.h"
@@ -36,7 +37,41 @@ static void __init test_stack(void)
 
 static void __init print_processes_backwards(void)
 {
-    // TODO
+    LIST_HEAD(ps_stack);
+    struct task_struct *task;
+    char* name = NULL;
+    stack_entry_t* entry = NULL;
+    
+    for_each_process(task)
+    {
+        name = (char*) kmalloc(sizeof(task->comm), GFP_KERNEL);
+        if (!name)
+            goto error;
+
+        get_task_comm(name, task);
+        
+        entry = create_stack_entry(name);
+        if (!entry)
+            goto error;
+            
+        stack_push(&ps_stack, entry);
+    }
+    
+    while (!list_empty(ps_stack))
+    {
+        entry = stack_pop(ps_stack);
+        printk(KERN_ALERT "%s\n", *STACK_ENTRY_DATA(entry, char*));
+        delete_stack_entry(entry);
+    }
+       
+error:
+    while (!list_empty(ps_stack))
+    {
+        entry = stack_pop(ps_stack);
+        delete_stack_entry(entry);
+    }
+   
+   ret -ENOMEM;
 }
 
 static int __init ll_init(void)
