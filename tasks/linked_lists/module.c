@@ -62,6 +62,7 @@ static int __init print_processes_backwards(void)
     {
         entry = stack_pop(&ps_stack);
         printk(KERN_ALERT "%s\n", STACK_ENTRY_DATA(entry, char*));
+        kfree(entry->data);
         delete_stack_entry(entry);
     }
        
@@ -69,6 +70,7 @@ error:
     while (!list_empty(&ps_stack))
     {
         entry = stack_pop(&ps_stack);
+        kfree(entry->data);
         delete_stack_entry(entry);
     }
    
